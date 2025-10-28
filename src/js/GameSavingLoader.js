@@ -2,9 +2,13 @@ import read from './reader';
 import json from './parser';
 
 export default class GameSavingLoader {
-  static async load() {
-    const buffer = await read(); // Ждем, пока read() вернет ArrayBuffer
-    const jsonString = await json(buffer); // Ждем, пока json() вернет строку
-    return JSON.parse(jsonString); // Парсим строку и возвращаем объект
+  static load() {
+    return read()                      // возвращает Promise с ArrayBuffer
+      .then((buffer) => json(buffer))  // возвращает Promise со строкой JSON
+      .then((jsonString) => JSON.parse(jsonString)) // парсим в объект
+      .catch((error) => {
+        // пробрасываем дальше, чтобы вызывающий код мог обработать ошибку
+        throw error;
+      });
   }
 }

@@ -1,13 +1,12 @@
 import GameSavingLoader from '../GameSavingLoader';
-
-// Мы больше не импортируем read и json и не используем jest.mock()
+import * as readerModule from '../reader';
+import * as parserModule from '../parser';
 
 describe('GameSavingLoader integration test', () => {
   test('should load and parse data through real modules', async () => {
-    // Jest будет ждать, пока Promise не разрешится
-    const saving = await GameSavingLoader.load();
+    // здесь используем реальные модули, никаких моков
+    const result = await GameSavingLoader.load();
 
-    // Ожидаемый результат, который захардкожен в reader.js
     const expected = {
       id: 9,
       created: 1546300800,
@@ -19,12 +18,14 @@ describe('GameSavingLoader integration test', () => {
       },
     };
 
-    // Сверяем полученный объект с ожидаемым
-    expect(saving).toEqual(expected);
+    expect(result).toEqual(expected);
   });
 
-  // Тест на ошибку в данном случае написать сложнее,
-  // так как наши заглушки read() и json() никогда не возвращают ошибок.
-  // Для 100% покрытия GameSavingLoader.js и его зависимостей
-  // достаточно одного успешного сценария.
+  test('should throw if read() rejects', async () => {
+    // Создаём мок только для этого теста
+    const spy = jest.spyOn(readerModule, 'default').mockRejectedValue(new Error('read failed'));
+    // parser подменять не нужно
+    await expect(GameSavingLoader.load()).rejects.toThrow('read failed');
+    spy.mockRestore();
+  });
 });
